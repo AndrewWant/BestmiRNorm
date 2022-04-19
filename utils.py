@@ -13,7 +13,7 @@ def generate_output_filename(filename_stub,
     :return:
     """
     if isinstance(location, str):
-        if (location == "") or not os.path.exists(location):
+        if (location == "") or (not os.path.isdir(location)):
             location = os.getcwd()
     else:
         print("Invalid argument: {} supplied for location. Only strings allowed.".format(location))    
