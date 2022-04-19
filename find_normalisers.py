@@ -1,3 +1,3 @@
-import miRNA_normalisers as miR_norm
+from . import miRNA_normalisers as miR_norm
 
 
