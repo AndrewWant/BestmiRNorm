@@ -22,6 +22,27 @@ def get_raw_data():
     return raw_xl_filename
 
 
+def read_xl(xl_filename, sheet_name):
+    df = pd.read_excel(xl_filename,
+                       sheet_name=sheet_name,
+                       header=[0, 1, 2, 3],
+                       index_col=[0])
+    return df
+    
+
+def check_xl_column_names(xl_filename, sheet_name):
+    xl_df = read_xl(xl_filename, sheet_name)
+    for idx, (xl_name, canon_name) in enumerate(zip(xl_df.columns.names, 
+                                                    ("Biological Group", "subject", "sex", "age"))):
+        if xl_name != canon_name:
+            print("Header row {}: Name is {}, should be {}".format(idx, xl_name, canon_name))
+            return False
+     return True
+        
+
+
+
+
 def generate_normalisers(normaliser_locations=(0, 1, 3, 4, 5, 6)):
     """
     Generate combinations normaliser indices based on normaliser_locations, included optional kw for endogenous control
