@@ -3,7 +3,24 @@
 # Identification of an optimal normaliser combination
 
 import numpy as np
+import pandas as pd
+import os
+from tkinter import filedialog
+import tkinter
 from itertools import combinations
+
+def get_raw_data():
+    cwd = os.getcwd()
+    root = tkinter.Tk()
+    raw_xl_filename = filedialog.askopenfilename(parent=root,
+                                                 initialdir=cwd,
+                                                 title="Please select your datafile",
+                                                 filetypes=(("Excel file","*.xlsx"),
+                                                             ("Excel file", "*.xls")))
+    raw_xl_filename = raw_xl_filename.replace("/", "\\")
+    root.destroy()
+    return raw_xl_filename
+
 
 def generate_normalisers(normaliser_locations=(0, 1, 3, 4, 5, 6)):
     """
@@ -37,9 +54,8 @@ def log_fold_change_from_cq(cq_dataframe,
     dcq_df = cq_dataframe - norm_mean
     ddcq_df = dcq_df - dcq_df.loc[:, (control, slice(None))].mean(axis=1).values.reshape((-1, 1))
     fold_change = 2 ** (ddcq_df * -1)
-    log2_fc = np.log2(fold_change)
     if rtn_log:
-        return log2_fc
+        return np.log2(fold_change)
     else:
         return fold_change
 
@@ -159,21 +175,23 @@ def rank_weight_generator(weights=(1, 2, 3)):
 
 def generate_suppl_ranked(cq_dataframe,
                           weights,
-                          instrument_subjects,
+#                           instrument_subjects,
                           normaliser_indices,
                           normalisers,
-                          rank_basis):
+                          rank_basis,
+                          control="HC"):
     normaliser_conversion_dict = dict([(idx, np.asarray(cq_dataframe.index[normalisers])) for (idx, normalisers) in
                                        enumerate(generate_normalisers(normaliser_indices))])
-    machine_subset = cq_dataframe.loc[:, (slice(None), instrument_subjects, slice(None), slice(None))]
+#     machine_subset = cq_dataframe.loc[:, (slice(None), instrument_subjects, slice(None), slice(None))]
     norm_generator = generate_normalisers(normaliser_indices)
-    result_df = make_result_dataframe(machine_subset,
+    result_df = make_result_dataframe(cq_dataframe,
                                       len(normaliser_conversion_dict))
-    combination_df, combination_normalisers = populate_dataframe(machine_subset,
+    combination_df, combination_normalisers = populate_dataframe(cq_dataframe,
                                                                  result_df,
                                                                  norm_generator)
     population_analysis = analyse_logfc_data(combination_df,
-                                             normalisers)
+                                             normalisers,
+                                            control=control)
     ranked_df = rank_data(population_analysis,
                           weights,
                           rank_basis)
