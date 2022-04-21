@@ -9,19 +9,27 @@ from tkinter import filedialog
 import tkinter
 from itertools import combinations
 
-def get_raw_data():
+def get_data(type="raw"):
+    data_types = {"raw": {"filetypes":(("Excel file","*.xlsx"),
+                                       ("Excel file", "*.xls"))}
+                 "normaliser": {"filetypes": "*.txt"}
     cwd = os.getcwd()
     root = tkinter.Tk()
-    raw_xl_filename = filedialog.askopenfilename(parent=root,
-                                                 initialdir=cwd,
-                                                 title="Please select your datafile",
-                                                 filetypes=(("Excel file","*.xlsx"),
-                                                             ("Excel file", "*.xls")))
-    raw_xl_filename = raw_xl_filename.replace("/", "\\")
+    filename = filedialog.askopenfilename(parent=root,
+                                          initialdir=cwd,
+                                          title="Please select your {} file".format(type),
+                                          **data_types[type])
+    filename = filename.replace("/", "\\")
     root.destroy()
-    return raw_xl_filename
+    return filename
 
 
+def get_candidate_normalisers(normaliser_filename):
+    with open(normaliser_filename, "r") as open_normalisers:
+        normalisers = open_normalisers.readlines()
+        return [x.strip("\n") for x in normalisers]
+
+        
 def read_xl(xl_filename, sheet_name):
     df = pd.read_excel(xl_filename,
                        sheet_name=sheet_name,
@@ -39,9 +47,6 @@ def check_xl_column_names(xl_filename, sheet_name):
             return False
      return True
         
-
-
-
 
 def generate_normalisers(normaliser_locations=(0, 1, 3, 4, 5, 6)):
     """
