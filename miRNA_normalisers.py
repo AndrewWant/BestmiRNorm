@@ -40,37 +40,6 @@ def read_xl(xl_filename, sheet_name):
     return df
     
 
-def check_xl_column_names(xl_dataframe):
-    canon_names = ("Biological Group", "subject", "sex", "age")
-    if np.all(xl_dataframe.columns.names == canon_names):
-        return True
-    else:
-        for idx, (xl_name, canon_name) in enumerate(zip(xl_dataframe.columns.names, canon_names)):
-            if xl_name != canon_name:
-                print("Header row {}: Name is {}, should be {}".format(idx, xl_name, canon_name))
-        return False
-
-
-def check_xl_bio_groups(xl_dataframe):
-    if np.unique(xl_df.columns.get_level_values("Biological Group")) == 2:
-        return True
-    else:
-        return False
-
-                     
-def check_normalisers(xl_dataframe, normaliser_filename):
-    normalisers = get_candidate_normalisers(normaliser_filename)
-    absent_normalisers = 0
-    for normaliser in normalisers:
-        if normaliser not in xl_dataframe_df.index:
-            absent_normalisers += 1
-            print("{} not found in Excel file".format(normaliser))
-    if absent_normalisers > 0:
-        return False
-    else:
-        return True
-
-
 def generate_normalisers(normaliser_locations=(0, 1, 3, 4, 5, 6)):
     """
     Generate combinations normaliser indices based on normaliser_locations, included optional kw for endogenous control
