@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import sys
 
 def check_xl_column_names(xl_dataframe):
     canon_names = ("Biological Group", "subject", "sex", "age")
@@ -20,9 +21,19 @@ def check_xl_bio_groups(xl_dataframe):
         print("Your Excel file contains {} biological groups, currently only 2 groups can be compared.".format(bio_group_number))
         return False
 
-                     
+    
+def normaliser_warning(list_of_normalisers):
+    if len(list_of_normalisers) > 11:
+        continue_ask = input("This comparison will take more than 40 minutes, and your system may run out of memory.\nWould you like to continue? (y/n) ")
+        if continue_ask == "y":
+            pass
+        else:
+            sys.exit()
+    
+    
 def check_normalisers(xl_dataframe, normaliser_filename):
     normalisers = get_candidate_normalisers(normaliser_filename)
+    normaliser_warning(normalisers)
     absent_normalisers = 0
     for normaliser in normalisers:
         if normaliser not in xl_dataframe_df.index:
