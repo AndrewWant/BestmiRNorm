@@ -17,7 +17,7 @@ def check_xl_bio_groups(xl_dataframe):
     if bio_group_number == 2:
         return True
     else:
-        print("Your Excel file contains {} biological groups, currently only 2 groups can be compared".format(bio_group_number))
+        print("Your Excel file contains {} biological groups, currently only 2 groups can be compared.".format(bio_group_number))
         return False
 
                      
