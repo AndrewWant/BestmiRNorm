@@ -33,3 +33,13 @@ def check_normalisers(xl_dataframe, normaliser_filename):
     else:
         return True
 
+
+def all_checks(xl_dataframe, normaliser_filename):
+    checks = (check_xl_column_names(xl_dataframe), 
+              check_xl_bio_groups(xl_dataframe),
+              check_normalisers(xl_dataframe, normaliser_filename))
+    if np.all(checks):
+        return True
+    else:
+        return False
+    
