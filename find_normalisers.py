@@ -6,9 +6,8 @@ sheet_name = input("Enter Sheet Name with Your Data: ")
 normaliser_file = miR_norm.get_filename("normaliser")
 
 normalisers = miR_norm.get_candidate_normalisers(normaliser_file)
-
-if miR_norm.check_xl_file(xl_file, sheet_name, normaliser_file):
-    pass
+if chk_files.all_checks(miR_norm.read_xl(xl_file), normaliser_file):
+    print("All file checks passed: Proceeding to analysis")
 else:
-    break
+    print("Correct files where indicated, and re-run")
 
