@@ -118,7 +118,9 @@ def populate_dataframe(cq_dataframe: pd.DataFrame,
 
 
 def analyse_logfc_data(log_fc_dataframe,
-                       normalisers):
+                       normalisers,
+                      positive_class,
+                      control_class):
     """
     Comparing log(FC) distributions based on population metrics, and creating combination metrics for AD and HC
     populations
@@ -128,21 +130,26 @@ def analyse_logfc_data(log_fc_dataframe,
     """
     ks_out = {}
     for idx in log_fc_dataframe.index.get_level_values(0):
-        ad_data = log_fc_dataframe.loc[(idx, normalisers), ("AD", slice(None))].values.flatten()
-        hc_data = log_fc_dataframe.loc[(idx, normalisers), ("HC", slice(None))].values.flatten()
-        k, p = ks_2samp(ad_data, hc_data)
-        ad_mean = ad_data.mean()
-        ad_std = ad_data.std()
-        hc_mean = hc_data.mean()
-        hc_std = hc_data.std()
+        pos_data = log_fc_dataframe.loc[(idx, normalisers), (positive_class, slice(None))].values.flatten()
+        cont_data = log_fc_dataframe.loc[(idx, normalisers), (control_class, slice(None))].values.flatten()
+        k, p = ks_2samp(pos_data, cont_data)
+        pos_mean = pos_data.mean()
+        pos_std = pos_data.std()
+        cont_mean = cont_data.mean()
+        cont_std = cont_data.std()
 
-        ks_out[idx] = (k, p, ad_mean, ad_std, hc_mean, hc_std)
+        ks_out[idx] = (k, p, pos_mean, pos_std, cont_mean, cont_std)
 
-    header = ("KS-score", "p-value", "AD_mean", "AD_std", "HC_mean", "HC_std")
+    header = ("KS-score", 
+              "p-value", 
+              "{}_mean".format(positive_class), 
+              "{}_std".format(positive_class), 
+              "{}_mean".format(control_class), 
+              "{}_std".format(control_class))
     # new_idx = pd.MultiIndex.from_arrays((range(len(ks_out)), ks_out.keys()))
     df = pd.DataFrame(ks_out.values(), index=ks_out.keys(), columns=header)
-    df["root_square_sum_mean"] = np.sqrt(df["AD_mean"] ** 2 + df["HC_mean"] ** 2)
-    df["mean_stds"] = df[["AD_std", "HC_std"]].mean(axis=1)
+    df["root_square_sum_mean"] = np.sqrt(df[header[2]] ** 2 + df[header[4]] ** 2)
+    df["mean_stds"] = df[[header[3], header[-1]]].mean(axis=1)
 
     summary_data = df.loc[:, np.asarray(("KS-score", "root_square_sum_mean", "mean_stds"))]
 
