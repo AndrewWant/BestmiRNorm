@@ -9,16 +9,16 @@ from tkinter import filedialog
 import tkinter
 from itertools import combinations
 
-def get_data(type="raw"):
-    data_types = {"raw": {"filetypes":(("Excel file","*.xlsx"),
-                                       ("Excel file", "*.xls"))}
-                 "normaliser": {"filetypes": "*.txt"}
+def get_filename(type="raw"):
+    filename_args = {"raw": {"filetypes":(("Excel file","*.xlsx"),
+                                          ("Excel file", "*.xls"))}
+                     "normaliser": {"filetypes": "*.txt"}
     cwd = os.getcwd()
     root = tkinter.Tk()
     filename = filedialog.askopenfilename(parent=root,
                                           initialdir=cwd,
                                           title="Please select your {} file".format(type),
-                                          **data_types[type])
+                                          **filename_args[type])
     filename = filename.replace("/", "\\")
     root.destroy()
     return filename
@@ -27,7 +27,9 @@ def get_data(type="raw"):
 def get_candidate_normalisers(normaliser_filename):
     with open(normaliser_filename, "r") as open_normalisers:
         normalisers = open_normalisers.readlines()
-        return [x.strip("\n") for x in normalisers]
+        normalisers = [x.strip("\n") for x in normalisers]
+        print("You have selected {} normalisers".format(len(normalisers)))
+        return normalisers
 
         
 def read_xl(xl_filename, sheet_name):
@@ -40,12 +42,16 @@ def read_xl(xl_filename, sheet_name):
 
 def check_xl_column_names(xl_filename, sheet_name):
     xl_df = read_xl(xl_filename, sheet_name)
-    for idx, (xl_name, canon_name) in enumerate(zip(xl_df.columns.names, 
-                                                    ("Biological Group", "subject", "sex", "age"))):
-        if xl_name != canon_name:
-            print("Header row {}: Name is {}, should be {}".format(idx, xl_name, canon_name))
-            return False
-     return True
+    canon_names = ("Biological Group", "subject", "sex", "age")
+    if np.all(xl_df.columns.names == canon_names):
+        return True
+    else:
+        for idx, (xl_name, canon_name) in enumerate(zip(xl_df.columns.names, canon_names)):
+            if xl_name != canon_name:
+                print("Header row {}: Name is {}, should be {}".format(idx, xl_name, canon_name))
+        return False
+
+
         
 
 def generate_normalisers(normaliser_locations=(0, 1, 3, 4, 5, 6)):
@@ -224,24 +230,23 @@ def generate_suppl_ranked(cq_dataframe,
     return ranked_df, normaliser_conversion_dict, combination_df, population_analysis
 
 
-def compare_ranked_normalisers(ranked_dfs: tuple,
+def compare_ranked_normalisers(ranked_df,
                                conversion_dict: dict,
                                list_of_endo_controls,
                                top_n_normalisers=10):
     normaliser_number_value = dict([(ctrl, i) for (i, ctrl) in enumerate(list_of_endo_controls, 1)])
     normaliser_number_value[""] = 0
     number_switched_norms = {}
-    for i, df in enumerate(ranked_dfs):
-        top_n = df.index[:top_n_normalisers].to_list()
-        top_n_output = []
-        for entry in top_n:
-            normalisers = conversion_dict[entry]
-            normaliser_with_blanks = []
-            for ctrl in list_of_endo_controls:
-                if ctrl in normalisers:
-                    normaliser_with_blanks.append(normaliser_number_value[ctrl])
-                else:
-                    normaliser_with_blanks.append(normaliser_number_value[""])
-            top_n_output.append(normaliser_with_blanks)
-        number_switched_norms[i] = top_n_output
+    top_n = ranked_df.index[:top_n_normalisers].to_list()
+    top_n_output = []
+    for entry in top_n:
+        normalisers = conversion_dict[entry]
+        normaliser_with_blanks = []
+        for ctrl in list_of_endo_controls:
+            if ctrl in normalisers:
+                normaliser_with_blanks.append(normaliser_number_value[ctrl])
+            else:
+                normaliser_with_blanks.append(normaliser_number_value[""])
+        top_n_output.append(normaliser_with_blanks)
+    number_switched_norms[i] = top_n_output
     return number_switched_norms
