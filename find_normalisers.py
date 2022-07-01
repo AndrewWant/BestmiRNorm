@@ -11,3 +11,4 @@ if chk_files.all_checks(miR_norm.read_xl(xl_file), normaliser_file):
 else:
     print("Correct files where indicated, and re-run")
 
+# proceed to analysis here using miR_norm
