@@ -29,20 +29,32 @@ def normaliser_warning(list_of_normalisers):
             pass
         else:
             sys.exit()
+
+            
+def get_candidate_normalisers(filename, sheet_name="normalisers"):
+    normaliser_df = pd.read_excel(filename, sheet_name=sheet_name)
+    return normaliser_df
+
+
+def get_normaliser_locations(normaliser_df):
+    normaliser_locations = []
+    for normaliser in normalisers:
+        if normaliser not in pcr_dataframe.index:
+            
+            print("{} not found in Excel file".format(normaliser))
+        else:
+            normaliser_locations.append(np.where(pcr_dataframe.index == normaliser)[0])
+    return normaliser_locations
+
     
-    
-def check_normalisers(xl_dataframe, normaliser_filename):
+def check_normalisers(pcr_dataframe, normaliser_filename):
     normalisers = get_candidate_normalisers(normaliser_filename)
     normaliser_warning(normalisers)
-    absent_normalisers = 0
-    for normaliser in normalisers:
-        if normaliser not in xl_dataframe_df.index:
-            absent_normalisers += 1
-            print("{} not found in Excel file".format(normaliser))
-    if absent_normalisers > 0:
-        return False
-    else:
+    normaliser_index_locations = get_normaliser_locations(normalisers)
+    if len(normaliser_index_locations) == len(normalisers):
         return True
+    else:
+        return False
 
 
 def all_checks(xl_dataframe, normaliser_filename):
