@@ -84,7 +84,7 @@ def make_result_dataframe(cq_dataframe,
     """
     Creation of an empty DataFrame that will enable more effective storage of experimental data.
     :param cq_dataframe:
-    :param qty_normalisers:
+    :param qty_normalisers: This is the number of combinations that will be generated!
     :return:
     """
     r_idx = pd.MultiIndex.from_product((range(qty_normalisers), cq_dataframe.index),
@@ -156,6 +156,19 @@ def analyse_logfc_data(log_fc_dataframe,
     return summary_data
 
 
+def rank_weight_generator(weights=(1, 2, 3)):
+    """Create spread of all rank weights for 1-3 times weighting
+
+       Note: (2, 2, 2) and (3, 3, 3) are discarded, because they will be equivalent to (1, 1, 1)
+    """
+    for rank_weights in product(weights, repeat=3):
+        i, j, k = rank_weights
+        if (i > 1) and (i == j == k):
+            continue
+        else:
+            yield rank_weights
+
+
 def rank_data(stat_summary_df,
               rank_weights=(1, 1, 1),
               rank_basis="sum"):
@@ -184,30 +197,15 @@ def rank_data(stat_summary_df,
     ranking_df["sum"] = ranking_df.sum(axis=1)
     return ranking_df.sort_values(by=rank_basis, ascending=False)
 
-
-def rank_weight_generator(weights=(1, 2, 3)):
-    """Create spread of all rank weights for 1-3 times weighting
-
-       Note: (2, 2, 2) and (3, 3, 3) are discarded, because they will be equivalent to (1, 1, 1)
-    """
-    for rank_weights in product(weights, repeat=3):
-        i, j, k = rank_weights
-        if (i > 1) and (i == j == k):
-            continue
-        else:
-            yield rank_weights
-
-
+                     
 def generate_suppl_ranked(cq_dataframe,
                           weights,
-#                           instrument_subjects,
                           normaliser_indices,
                           normalisers,
-                          rank_basis,
+                          rank_basis="sum",
                           control="HC"):
     normaliser_conversion_dict = dict([(idx, np.asarray(cq_dataframe.index[normalisers])) for (idx, normalisers) in
                                        enumerate(generate_normalisers(normaliser_indices))])
-#     machine_subset = cq_dataframe.loc[:, (slice(None), instrument_subjects, slice(None), slice(None))]
     norm_generator = generate_normalisers(normaliser_indices)
     result_df = make_result_dataframe(cq_dataframe,
                                       len(normaliser_conversion_dict))
@@ -225,9 +223,9 @@ def generate_suppl_ranked(cq_dataframe,
 
 def compare_ranked_normalisers(ranked_df,
                                conversion_dict: dict,
-                               list_of_endo_controls,
+                               list_of_normalisers,
                                top_n_normalisers=10):
-    normaliser_number_value = dict([(ctrl, i) for (i, ctrl) in enumerate(list_of_endo_controls, 1)])
+    normaliser_number_value = dict([(ctrl, i) for (i, ctrl) in enumerate(list_of_normalisers, 1)])
     normaliser_number_value[""] = 0
     number_switched_norms = {}
     top_n = ranked_df.index[:top_n_normalisers].to_list()
@@ -235,7 +233,7 @@ def compare_ranked_normalisers(ranked_df,
     for entry in top_n:
         normalisers = conversion_dict[entry]
         normaliser_with_blanks = []
-        for ctrl in list_of_endo_controls:
+        for ctrl in list_of_normalisers:
             if ctrl in normalisers:
                 normaliser_with_blanks.append(normaliser_number_value[ctrl])
             else:
@@ -243,3 +241,5 @@ def compare_ranked_normalisers(ranked_df,
         top_n_output.append(normaliser_with_blanks)
     number_switched_norms[i] = top_n_output
     return number_switched_norms
+       
+    
