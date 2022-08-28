@@ -12,7 +12,7 @@ from itertools import combinations
 def get_filename(type="raw"):
     filename_args = {"raw": {"filetypes":(("Excel file","*.xlsx"),
                                           ("Excel file", "*.xls"))}
-                     "normaliser": {"filetypes": "*.txt"}
+                     "normaliser": {"filetypes": "*.txt"}}
     cwd = os.getcwd()
     root = tkinter.Tk()
     filename = filedialog.askopenfilename(parent=root,
