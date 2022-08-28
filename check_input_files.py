@@ -13,10 +13,13 @@ def check_xl_column_names(xl_dataframe):
         return False
 
 
-def check_xl_bio_groups(xl_dataframe):
+def check_xl_bio_groups(xl_dataframe, positive_class):
     bio_group_number = np.unique(xl_df.columns.get_level_values("Biological Group"))
     if bio_group_number == 2:
-        return True
+        if positive_class in xl_df.columns.get_level_values("Biological Group"):
+            return True
+        else:
+            print("Your positive class label is not found in the data")
     else:
         print("Your Excel file contains {} biological groups, currently only 2 groups can be compared.".format(bio_group_number))
         return False
@@ -30,22 +33,17 @@ def normaliser_warning(list_of_normalisers):
         else:
             sys.exit()
 
-            
-def get_candidate_normalisers(filename, sheet_name="normalisers"):
-    normaliser_df = pd.read_excel(filename, sheet_name=sheet_name)
-    return normaliser_df
 
-
-def get_normaliser_locations(normaliser_df):
+def get_normaliser_locations(pcr_dataframe, list_of_normalisers):
     normaliser_locations = []
-    for normaliser in normalisers:
+    for normaliser in list_of_normalisers:
         if normaliser not in pcr_dataframe.index:
             
             print("{} not found in Excel file".format(normaliser))
         else:
             normaliser_locations.append(np.where(pcr_dataframe.index == normaliser)[0])
     return normaliser_locations
-
+   
     
 def check_normalisers(pcr_dataframe, normaliser_filename):
     normalisers = get_candidate_normalisers(normaliser_filename)
@@ -54,12 +52,13 @@ def check_normalisers(pcr_dataframe, normaliser_filename):
     if len(normaliser_index_locations) == len(normalisers):
         return True
     else:
+        print("Not all normalisers present in data file")
         return False
 
 
-def all_checks(xl_dataframe, normaliser_filename):
+def all_checks(xl_dataframe, normaliser_filename, positive_class):
     checks = (check_xl_column_names(xl_dataframe), 
-              check_xl_bio_groups(xl_dataframe),
+              check_xl_bio_groups(xl_dataframe, positive_class),
               check_normalisers(xl_dataframe, normaliser_filename))
     if np.all(checks):
         return True
