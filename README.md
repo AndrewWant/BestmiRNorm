@@ -16,3 +16,5 @@ The current implementation considers the following:
 And these scores are calculated for all possible combinations of the potential normalisers. All normaliser combinations are then ranked, with the lowest value assigned to the combination with the highest value for a particular scoring criterion. These three ranked values may then be multiplied by a weighting factor which represents the experimenter's assessment of the importance of that criterion to the overall assessment of stability. This system was validated with integer values between 1 and 3, although in theory any combination will work. 
 
 Plotting tools may be made available at a future time, depending on specific requests. Crucially, additional functionality can be implemented by anyone due to the implementation in a widely used open-source programming language. 
+
+Download the files into your current Python working directory, prepare the two files as in the templates provided and run find_normalisers.py from the command line and follow the prompts for information.
