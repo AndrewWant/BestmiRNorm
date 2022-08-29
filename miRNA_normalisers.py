@@ -8,17 +8,19 @@ import os
 from tkinter import filedialog
 import tkinter
 from itertools import combinations
+from scipy.stats import ks_2samp
 
-def get_filename(type="raw"):
+def get_filename(type_="raw"):
     filename_args = {"raw": {"filetypes":(("Excel file","*.xlsx"),
-                                          ("Excel file", "*.xls"))}
-                     "normaliser": {"filetypes": "*.txt"}}
+                                          ("Excel file", "*.xls"))},
+                     "normaliser": {"filetypes": (("Text file", "*.txt"),
+("Text file", "*.txt"))}}
     cwd = os.getcwd()
     root = tkinter.Tk()
     filename = filedialog.askopenfilename(parent=root,
                                           initialdir=cwd,
-                                          title="Please select your {} file".format(type),
-                                          **filename_args[type])
+                                          title="Please select your {} file".format(type_),
+                                          **filename_args[type_])
     filename = filename.replace("/", "\\")
     root.destroy()
     return filename
@@ -27,12 +29,12 @@ def get_filename(type="raw"):
 def get_candidate_normalisers(normaliser_filename):
     with open(normaliser_filename, "r") as open_normalisers:
         normalisers = open_normalisers.readlines()
-        normalisers = [x.strip("\n") for x in normalisers]
+        normalisers = np.squeeze([x.strip("\n") for x in normalisers])
         print("You have selected {} normalisers".format(len(normalisers)))
         return normalisers
 
         
-def read_xl(xl_filename, sheet_name):
+def read_xl(xl_filename, sheet_name="Results"):
     df = pd.read_excel(xl_filename,
                        sheet_name=sheet_name,
                        header=[0, 1, 2, 3],
@@ -65,6 +67,7 @@ def log_fold_change_from_cq(cq_dataframe,
     :param rtn_log:
     :return:
     """
+    
     if len(normalisers) == 1:
         norm_mean = cq_dataframe.loc[normalisers, :].values
     else:
@@ -111,8 +114,9 @@ def populate_dataframe(cq_dataframe: pd.DataFrame,
     retained_normalisers = {}
     mirnas = cq_dataframe.index
     for index_, normalisers in enumerate(normaliser_generator):
+        normalisers = np.squeeze(normalisers)
         retained_normalisers[index_] = mirnas[normalisers]
-        output_dataframe.loc[(index_, mirnas), :] = log_fold_change_from_cq(cq_dataframe,
+        output_dataframe.loc[(index_, mirnas,), :] = log_fold_change_from_cq(cq_dataframe,
                                                                             mirnas[normalisers]).values
     return output_dataframe, retained_normalisers
 
@@ -203,6 +207,7 @@ def generate_suppl_ranked(cq_dataframe,
                           normaliser_indices,
                           normalisers,
                           rank_basis="sum",
+                          positive_class="AD",
                           control="HC"):
     normaliser_conversion_dict = dict([(idx, np.asarray(cq_dataframe.index[normalisers])) for (idx, normalisers) in
                                        enumerate(generate_normalisers(normaliser_indices))])
@@ -214,32 +219,13 @@ def generate_suppl_ranked(cq_dataframe,
                                                                  norm_generator)
     population_analysis = analyse_logfc_data(combination_df,
                                              normalisers,
-                                            control=control)
+                                             positive_class=positive_class,
+                                            control_class=control)
     ranked_df = rank_data(population_analysis,
                           weights,
                           rank_basis)
     return ranked_df, normaliser_conversion_dict, combination_df, population_analysis
 
 
-def compare_ranked_normalisers(ranked_df,
-                               conversion_dict: dict,
-                               list_of_normalisers,
-                               top_n_normalisers=10):
-    normaliser_number_value = dict([(ctrl, i) for (i, ctrl) in enumerate(list_of_normalisers, 1)])
-    normaliser_number_value[""] = 0
-    number_switched_norms = {}
-    top_n = ranked_df.index[:top_n_normalisers].to_list()
-    top_n_output = []
-    for entry in top_n:
-        normalisers = conversion_dict[entry]
-        normaliser_with_blanks = []
-        for ctrl in list_of_normalisers:
-            if ctrl in normalisers:
-                normaliser_with_blanks.append(normaliser_number_value[ctrl])
-            else:
-                normaliser_with_blanks.append(normaliser_number_value[""])
-        top_n_output.append(normaliser_with_blanks)
-    number_switched_norms[i] = top_n_output
-    return number_switched_norms
        
     
