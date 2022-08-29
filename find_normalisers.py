@@ -1,6 +1,9 @@
-from . import miRNA_normalisers as miR_norm
-from . import check_input_files as chk_files
+import miRNA_normalisers as miR_norm
+import check_input_files as chk_files
 
+import numpy as np
+import os
+import pandas as pd
 from datetime import datetime
 import sys
 
@@ -15,14 +18,14 @@ def ask_rank_weights():
     rank_weights = []
     score_components = ("Kolmogorov-Smirnov score", "Mean distance from zero", "Median of standard deviations")
     for component in score_components:
-        next_rank_weight = input("Please indicate weight to apply to {}: (numerical values only)".format(component))
+        next_rank_weight = input("Please indicate weight to apply to {}: (numerical values only) ".format(component))
         try:
             weight_as_number = float(next_rank_weight)
             rank_weights.append(weight_as_number)
         except ValueError:
             rank_weights.append(next_rank_weight)
     if np.any(rank_weights == None):
-        print("One or more weights were not valid, your weights were: {}, {}, {}".format(*rank_weights)\nApplying equal weight...)
+        print("One or more weights were not valid, your weights were: {}, {}, {}\nApplying equal weight...".format(*rank_weights))
         return (1, 1, 1)
     else:
         return rank_weights
@@ -42,12 +45,13 @@ xl_file = miR_norm.get_filename()
 sheet_name = input("Enter Sheet Name with Your Data, or press enter to use the default from the template: ")
 positive_class = input("Enter the label of your positive class (e.g. disease-bearing subjects): ")
 
-if not sheet_name:
-    sheet_name == "Results"
+# if sheet_name == "":
+sheet_name == "Results"
 normaliser_file = miR_norm.get_filename("normaliser")
 
 normalisers = miR_norm.get_candidate_normalisers(normaliser_file)
-if chk_files.all_checks(miR_norm.read_xl(xl_file), normaliser_file):
+
+if chk_files.all_checks(miR_norm.read_xl(xl_file, sheet_name), normaliser_file, positive_class):
     print("All file checks passed: Proceeding to analysis")
 else:
     print("Correct files where indicated, and re-run")
@@ -64,26 +68,25 @@ ranked_df, normaliser_conversion_dict, combination_df, population_analysis = miR
                                                                                                             normaliser_locations,
                                                                                                             normalisers,
                                                                                                             control=negative_class)
-normaliser_comparison = miR_norm.compare_ranked_normalisers(ranked_df, normaliser_conversion_dict, normalisers)
+
 
 output_folder = create_output_filepath(xl_file)
 output_dict = {"ranked_df": ranked_df,
                "normaliser_conversion_dict": normaliser_conversion_dict,
                "combination_df": combination_df,
-               "population_analysis": population_analysis,
-               "normaliser_comparison": normaliser_comparison}
+               "population_analysis": population_analysis}
                      
 for output_label, output in output_dict.items():
     output_filename = create_output_filename(output_label)
     output_filepath = os.sep.join((output_folder, output_filename))
-    if isinstance(output, pd.DateFrame):
+    if isinstance(output, pd.DataFrame):
         output_filename = output_filepath + ".xlsx"
         output.to_excel(output_filename)
     elif isinstance(output, dict):
-        output_filename = output_filepath + ".xlsx"
+        output_filename = output_filepath + ".txt"
         with open(output_filename, "a") as opened_file:
             for key, value in output.items():
                 value_output = "{}" * len(value)
-                value_output = value_output.format(value)
-                opened_file.write("{}\t\t{}".format(key, value_output))
+                # value_output = value_output.format(value)
+                opened_file.write("{}, {}, {}".format(key, "\t", value))
             
