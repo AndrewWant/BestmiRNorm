@@ -1,3 +1,5 @@
+import miRNA_normalisers as miR_norm
+
 import pandas as pd
 import numpy as np
 import sys
@@ -14,9 +16,9 @@ def check_xl_column_names(xl_dataframe):
 
 
 def check_xl_bio_groups(xl_dataframe, positive_class):
-    bio_group_number = np.unique(xl_df.columns.get_level_values("Biological Group"))
-    if bio_group_number == 2:
-        if positive_class in xl_df.columns.get_level_values("Biological Group"):
+    bio_group_number = np.unique((xl_dataframe.columns.get_level_values("Biological Group")))
+    if len(bio_group_number) == 2:
+        if positive_class in (xl_dataframe.columns.get_level_values("Biological Group")):
             return True
         else:
             print("Your positive class label is not found in the data")
@@ -46,9 +48,9 @@ def get_normaliser_locations(pcr_dataframe, list_of_normalisers):
    
     
 def check_normalisers(pcr_dataframe, normaliser_filename):
-    normalisers = get_candidate_normalisers(normaliser_filename)
+    normalisers = miR_norm.get_candidate_normalisers(normaliser_filename)
     normaliser_warning(normalisers)
-    normaliser_index_locations = get_normaliser_locations(normalisers)
+    normaliser_index_locations = get_normaliser_locations(pcr_dataframe, normalisers)
     if len(normaliser_index_locations) == len(normalisers):
         return True
     else:
