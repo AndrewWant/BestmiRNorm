@@ -4,7 +4,7 @@ This script enables more transparent identification of the optimal normalisers f
 It accepts an input file, with a pre-specified format, for the qPCR data along with information about the potential normalisers in the dataset. 
 The current implementation can examine up to 11 normalisers in a time-efficient manner. If more than 11 normalisers are analysed, this will take at least 45 minutes, and more than 15 will consume considerable system resources.
 
-This repository also contains an example Microsoft Excel (.xlsx) file for reference.
+Example Template files (xlsx and txt) are found under this DOI: 10.5281/zenodo.7060403
 
 This code may be adapted in the future to reduce this issue by batching the processing.
 
